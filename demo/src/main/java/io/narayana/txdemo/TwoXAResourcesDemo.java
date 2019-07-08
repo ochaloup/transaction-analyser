@@ -6,8 +6,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
-import javax.ejb.Stateful;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.jms.JMSException;
@@ -18,21 +16,30 @@ import javax.jms.TextMessage;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
 import javax.jms.XASession;
+import javax.naming.InitialContext;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 import javax.transaction.Transactional;
 
+
 @TransactionAttribute(TransactionAttributeType.MANDATORY)
 public class TwoXAResourcesDemo extends Demo {
     
-    @Resource(mappedName = "java:/JmsXA")
+    //@Resource(name = "activemq-ra-dummy", mappedName = "java:/jms/DummyXaConnectionFactory")
     private XAConnectionFactory xaConnectionFactory;
 
-    @Resource(mappedName = "java:/jms/queue/testQueue")
+    //@Resource(mappedName = "java:/jms/queue/testQueue")
     private Queue queue;
     
     public TwoXAResourcesDemo() {
-    	super(9, "Two-phase commit transaction on two different XA resources.", "-");
+    	super(9, "Two-phase commit transaction on two different XA resources.", "Two-phase commit transaction on two different XA resources.");
+		try {
+		    InitialContext context = new InitialContext();
+		    xaConnectionFactory = (XAConnectionFactory) context.lookup("java:/jms/DummyXaConnectionFactory");
+		    queue = (Queue) context.lookup("java:/jms/queue/DummyQueue");
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
     }
     
     private static final Logger LOG = Logger.getGlobal();
@@ -50,14 +57,15 @@ public class TwoXAResourcesDemo extends Demo {
     }
     
     @Override
-    //@Transactional(value=Transactional.TxType.REQUIRED, rollbackOn=DummyAppException.class)
+    @Transactional(value=Transactional.TxType.REQUIRED, rollbackOn=DummyAppException.class)
     public DemoResult run(TransactionManager tm, EntityManager em) {
+    	StringBuilder strBldr = new StringBuilder();
     	try {
-        	StringBuilder strBldr = new StringBuilder();
     		tm.begin();
     		
     		List<DummyEntity> dummies = prepareDummies();
         	for (DummyEntity de : dummies) {
+        		//this line of code should be here instead:
         		//dbSave(em, de);
         		if (de.isTransient()) {
                     em.persist(de);
@@ -65,24 +73,9 @@ public class TwoXAResourcesDemo extends Demo {
                     em.merge(de);
                 }
         	}
-        	//for(DummyEntity de : dbGet(em)) {
-        	for(DummyEntity de : em.createQuery("select e from DummyEntity e", DummyEntity.class)
-            		.getResultList()) {
-        		//jmsSend(de.getName());
-        		//jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
-        		try(XAConnection connection = xaConnectionFactory.createXAConnection();
-                        XASession session = connection.createXASession();
-                		MessageProducer messageProducer = session.createProducer(queue);
-        				MessageConsumer consumer = session.createConsumer(queue)) {
-                    connection.start();
-                    TextMessage textMessage = session.createTextMessage();
-                    textMessage.setText(de.getName());
-                    messageProducer.send(textMessage);
-                    final TextMessage message = (TextMessage) consumer.receive(5000);
-                    strBldr.append(message.getText() + "\n");
-                } catch (JMSException e) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
+        	for(DummyEntity de : dbGet(em)) {
+        		jmsSend(de.getName());
+        		jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
         	}
         	if(new Random().nextInt() % 3 == 0) {
         	    LOG.fine("Simulating application exception being thrown...");
@@ -91,17 +84,18 @@ public class TwoXAResourcesDemo extends Demo {
         	tm.commit();
         	return new DemoResult(0, "Commited two resources - JMS & DB, message:\n\n" + strBldr.toString());
 		} catch (Exception e) {
-			throw new RuntimeException("Unexpected exception has been thrown: " + e.getMessage());
+			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
     }
     
-    //@Transactional
+    @Transactional
     private List<DummyEntity> dbGet(EntityManager em) {
        return em.createQuery("select e from DummyEntity e", DummyEntity.class)
         		.getResultList();
     }
 
-    //@Transactional
+    @Transactional
     private Long dbSave(EntityManager em, DummyEntity quickstartEntity) {
         if (quickstartEntity.isTransient()) {
             em.persist(quickstartEntity);
@@ -112,7 +106,7 @@ public class TwoXAResourcesDemo extends Demo {
         return quickstartEntity.getId();
     }
     
-    //@Transactional
+    @Transactional
     private void jmsSend(final String message) {
 
         try(XAConnection connection = xaConnectionFactory.createXAConnection();
@@ -127,15 +121,14 @@ public class TwoXAResourcesDemo extends Demo {
         }
     }
 
-    //@Transactional
+    @Transactional
     private Optional<String> jmsGet() {
         try(XAConnection connection = xaConnectionFactory.createXAConnection();
                 XASession session = connection.createXASession();
         		MessageConsumer consumer = session.createConsumer(queue)) {
             connection.start();
             final TextMessage message = (TextMessage) consumer.receive(5000);
-            String text = message.getText();
-            return text == null ? Optional.<String>empty() : Optional.of(text);
+            return message == null ? Optional.<String>empty() : Optional.of(message.getText());
         } catch (JMSException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

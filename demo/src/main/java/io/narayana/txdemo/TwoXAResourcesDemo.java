@@ -7,7 +7,9 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.ejb.Stateless;
+import javax.ejb.Stateful;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -17,15 +19,11 @@ import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
 import javax.jms.XASession;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.transaction.TransactionManager;
 import javax.transaction.Transactional;
 
-@Stateless
+@TransactionAttribute(TransactionAttributeType.MANDATORY)
 public class TwoXAResourcesDemo extends Demo {
-
-    @PersistenceContext(name = "io.narayana.txdemo", unitName = "io.narayana.txdemo")
-    EntityManager entityManager;
     
     @Resource(mappedName = "java:/JmsXA")
     private XAConnectionFactory xaConnectionFactory;
@@ -39,10 +37,8 @@ public class TwoXAResourcesDemo extends Demo {
     
     private static final Logger LOG = Logger.getGlobal();
     
-    private static final int DUMMIES_CAP = 5;
-    
     private List<DummyEntity> prepareDummies() {
-    	int noDummies = new Random().nextInt(8);
+    	int noDummies = 1 + new Random().nextInt(10);
     	List<DummyEntity> dummies = new ArrayList<>();
     	for(int i = 1; i <= noDummies; i++) {
     		dummies.add(new DummyEntity("dummy #" + i + " says hello"));
@@ -50,47 +46,74 @@ public class TwoXAResourcesDemo extends Demo {
     	return dummies;
     }
     
-    public static class CantHandleThatManyDummiesException extends RuntimeException {
+    public static class DummyAppException extends RuntimeException {
     }
     
     @Override
-    @Transactional(value=Transactional.TxType.REQUIRED, rollbackOn=CantHandleThatManyDummiesException.class)
-    public DemoResult run(TransactionManager utx, EntityManager em) {
-    	List<DummyEntity> dummies = prepareDummies();
-    	for (DummyEntity de : dummies) {
-    		dbSave(de);
-    	}
-    	int retrievedNoDummies = 0;
-    	for(DummyEntity de : dbGet()) {
-    		jmsSend(de.getName());
-    		jmsGet().ifPresent(dummy -> LOG.fine(dummy));
-    		retrievedNoDummies++;
-    	}
-    	if(retrievedNoDummies > DUMMIES_CAP) {
-    	    throw new CantHandleThatManyDummiesException();
-    	}
-    	return new DemoResult(0, "Commited two resources - JMS & DB");
+    //@Transactional(value=Transactional.TxType.REQUIRED, rollbackOn=DummyAppException.class)
+    public DemoResult run(TransactionManager tm, EntityManager em) {
+    	try {
+        	StringBuilder strBldr = new StringBuilder();
+    		tm.begin();
+    		
+    		List<DummyEntity> dummies = prepareDummies();
+        	for (DummyEntity de : dummies) {
+        		//dbSave(em, de);
+        		if (de.isTransient()) {
+                    em.persist(de);
+                } else {
+                    em.merge(de);
+                }
+        	}
+        	//for(DummyEntity de : dbGet(em)) {
+        	for(DummyEntity de : em.createQuery("select e from DummyEntity e", DummyEntity.class)
+            		.getResultList()) {
+        		//jmsSend(de.getName());
+        		//jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
+        		try(XAConnection connection = xaConnectionFactory.createXAConnection();
+                        XASession session = connection.createXASession();
+                		MessageProducer messageProducer = session.createProducer(queue);
+        				MessageConsumer consumer = session.createConsumer(queue)) {
+                    connection.start();
+                    TextMessage textMessage = session.createTextMessage();
+                    textMessage.setText(de.getName());
+                    messageProducer.send(textMessage);
+                    final TextMessage message = (TextMessage) consumer.receive(5000);
+                    strBldr.append(message.getText() + "\n");
+                } catch (JMSException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+        	}
+        	if(new Random().nextInt() % 3 == 0) {
+        	    LOG.fine("Simulating application exception being thrown...");
+        	    throw new DummyAppException();
+        	}
+        	tm.commit();
+        	return new DemoResult(0, "Commited two resources - JMS & DB, message:\n\n" + strBldr.toString());
+		} catch (Exception e) {
+			throw new RuntimeException("Unexpected exception has been thrown: " + e.getMessage());
+		}
     }
     
-    @Transactional(Transactional.TxType.MANDATORY)
-    public List<DummyEntity> dbGet() {
-       return entityManager.createQuery("select e from DummyEntity e", DummyEntity.class)
+    //@Transactional
+    private List<DummyEntity> dbGet(EntityManager em) {
+       return em.createQuery("select e from DummyEntity e", DummyEntity.class)
         		.getResultList();
     }
 
-    @Transactional(Transactional.TxType.MANDATORY)
-    public Long dbSave(DummyEntity quickstartEntity) {
+    //@Transactional
+    private Long dbSave(EntityManager em, DummyEntity quickstartEntity) {
         if (quickstartEntity.isTransient()) {
-            entityManager.persist(quickstartEntity);
+            em.persist(quickstartEntity);
         } else {
-            entityManager.merge(quickstartEntity);
+            em.merge(quickstartEntity);
         }
 
         return quickstartEntity.getId();
     }
     
-    @Transactional(Transactional.TxType.MANDATORY)
-    public void jmsSend(final String message) {
+    //@Transactional
+    private void jmsSend(final String message) {
 
         try(XAConnection connection = xaConnectionFactory.createXAConnection();
                 XASession session = connection.createXASession();
@@ -104,8 +127,8 @@ public class TwoXAResourcesDemo extends Demo {
         }
     }
 
-    @Transactional(Transactional.TxType.MANDATORY)
-    public Optional<String> jmsGet() {
+    //@Transactional
+    private Optional<String> jmsGet() {
         try(XAConnection connection = xaConnectionFactory.createXAConnection();
                 XASession session = connection.createXASession();
         		MessageConsumer consumer = session.createConsumer(queue)) {

@@ -10,10 +10,10 @@
     </appender>
  
     <root>
-        <level value="TRACE" />
+        <level value="DEBUG" />
         <appender-ref ref="console" />
     </root>
  
-    <logger name="org.hibernate.SQL" level="TRACE"/>
-    <logger name="org.jboss.as.jpa" level="TRACE"/>
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.jboss.as.jpa" level="DEBUG"/>
 </log4j:configuration>

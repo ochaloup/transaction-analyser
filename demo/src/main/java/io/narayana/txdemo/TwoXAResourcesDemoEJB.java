@@ -10,16 +10,14 @@ import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
+import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.jms.XAConnection;
-import javax.jms.XAConnectionFactory;
-import javax.jms.XASession;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
@@ -32,19 +30,20 @@ import javax.transaction.UserTransaction;
 public class TwoXAResourcesDemoEJB extends Demo {
     
 	// TODO: annotation lookup still does not work, why?
-    @Resource(lookup = "java:/jboss/DummyXaConnectionFactory")
-    private XAConnectionFactory xaConnectionFactory;
+    @Resource(lookup = "java:/JmsXA")
+    private ConnectionFactory xaConnectionFactory;
 
     @Resource(lookup = "java:/jms/queue/DummyQueue")
     private Queue queue;
     
     // This is not injected!
-    @Resource
-    private UserTransaction userTransaction;
-    
+    /*@Resource
+    private UserTransaction userTransaction; */
+
+    /*
     public TwoXAResourcesDemoEJB() {
     	super(9, "[EJB backed] Two-phase commit transaction on two different XA resources.", "[EJB backed] Two-phase commit transaction on two different XA resources.");
-    }
+    } */
     
     private static final Logger LOG = Logger.getGlobal();
     
@@ -103,8 +102,8 @@ public class TwoXAResourcesDemoEJB extends Demo {
     
     private void jmsSend(final String message) {
 
-        try(XAConnection connection = xaConnectionFactory.createXAConnection();
-                XASession session = connection.createXASession();
+        try(Connection connection = xaConnectionFactory.createConnection();
+                Session session = connection.createSession();
         		MessageProducer messageProducer = session.createProducer(queue)) {
             connection.start();
             TextMessage textMessage = session.createTextMessage();
@@ -116,8 +115,8 @@ public class TwoXAResourcesDemoEJB extends Demo {
     }
 
     private Optional<String> jmsGet() {
-        try(XAConnection connection = xaConnectionFactory.createXAConnection();
-                XASession session = connection.createXASession();
+        try(Connection connection = xaConnectionFactory.createConnection();
+                Session session = connection.createSession();
         		MessageConsumer consumer = session.createConsumer(queue)) {
             connection.start();
             final TextMessage message = (TextMessage) consumer.receive(5000);

@@ -57,7 +57,8 @@ public class DemoRestService {
         demos.add(new TimeoutTransactionDemo());
         demos.add(new PrepareFailDemo());
         demos.add(new ClientDrivenRollbackDemo());
-        demos.add(new TwoXAResourcesDemo());
+        demos.add(new TwoXAResourcesDemoEJB());
+        demos.add(new TwoXAResourcesDemoCDI());
     }
 
     @GET

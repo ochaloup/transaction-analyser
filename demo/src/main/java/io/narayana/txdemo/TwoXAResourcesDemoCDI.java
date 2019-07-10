@@ -6,8 +6,9 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.annotation.Resource;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -16,36 +17,35 @@ import javax.jms.TextMessage;
 import javax.jms.XAConnection;
 import javax.jms.XAConnectionFactory;
 import javax.jms.XASession;
-import javax.naming.InitialContext;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.TransactionManager;
 import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
-
-@TransactionAttribute(TransactionAttributeType.MANDATORY)
-public class TwoXAResourcesDemo extends Demo {
+/**
+ * CDI and declarative based transaction programming. 
+ *
+ */
+@RequestScoped
+public class TwoXAResourcesDemoCDI extends Demo {
     
-    //@Resource(name = "activemq-ra-dummy", mappedName = "java:/jms/DummyXaConnectionFactory")
+	// TODO: annotation lookup does not work, why?
+	// org.jboss.weld.exceptions.DeploymentException: WELD-001408
+    // @Inject
     private XAConnectionFactory xaConnectionFactory;
 
-    //@Resource(mappedName = "java:/jms/queue/testQueue")
+    //@Inject
     private Queue queue;
     
-    public TwoXAResourcesDemo() {
-    	super(9, "Two-phase commit transaction on two different XA resources.", "Two-phase commit transaction on two different XA resources.");
-		try {
-		    InitialContext context = new InitialContext();
-		    xaConnectionFactory = (XAConnectionFactory) context.lookup("java:/jms/DummyXaConnectionFactory");
-		    queue = (Queue) context.lookup("java:/jms/queue/DummyQueue");
-		} catch (Exception e) {
-		    e.printStackTrace();
-		}
+    public TwoXAResourcesDemoCDI() {
+    	super(9, "[CDI backed] Two-phase commit transaction on two different XA resources.", "[CDI backed] Two-phase commit transaction on two different XA resources.");
     }
     
     private static final Logger LOG = Logger.getGlobal();
     
     private List<DummyEntity> prepareDummies() {
-    	int noDummies = 1 + new Random().nextInt(10);
+    	int noDummies = 1 + new Random().nextInt(3);
     	List<DummyEntity> dummies = new ArrayList<>();
     	for(int i = 1; i <= noDummies; i++) {
     		dummies.add(new DummyEntity("dummy #" + i + " says hello"));
@@ -57,21 +57,13 @@ public class TwoXAResourcesDemo extends Demo {
     }
     
     @Override
-    @Transactional(value=Transactional.TxType.REQUIRED, rollbackOn=DummyAppException.class)
-    public DemoResult run(TransactionManager tm, EntityManager em) {
+    @Transactional(value = TxType.REQUIRED)
+    public DemoResult run(TransactionManager _tm, EntityManager em) {
     	StringBuilder strBldr = new StringBuilder();
     	try {
-    		tm.begin();
-    		
     		List<DummyEntity> dummies = prepareDummies();
         	for (DummyEntity de : dummies) {
-        		//this line of code should be here instead:
-        		//dbSave(em, de);
-        		if (de.isTransient()) {
-                    em.persist(de);
-                } else {
-                    em.merge(de);
-                }
+        		dbSave(em, de);
         	}
         	for(DummyEntity de : dbGet(em)) {
         		jmsSend(de.getName());
@@ -81,7 +73,6 @@ public class TwoXAResourcesDemo extends Demo {
         	    LOG.fine("Simulating application exception being thrown...");
         	    throw new DummyAppException();
         	}
-        	tm.commit();
         	return new DemoResult(0, "Commited two resources - JMS & DB, message:\n\n" + strBldr.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -89,13 +80,11 @@ public class TwoXAResourcesDemo extends Demo {
 		}
     }
     
-    @Transactional
     private List<DummyEntity> dbGet(EntityManager em) {
        return em.createQuery("select e from DummyEntity e", DummyEntity.class)
         		.getResultList();
     }
 
-    @Transactional
     private Long dbSave(EntityManager em, DummyEntity quickstartEntity) {
         if (quickstartEntity.isTransient()) {
             em.persist(quickstartEntity);
@@ -106,7 +95,6 @@ public class TwoXAResourcesDemo extends Demo {
         return quickstartEntity.getId();
     }
     
-    @Transactional
     private void jmsSend(final String message) {
 
         try(XAConnection connection = xaConnectionFactory.createXAConnection();
@@ -121,7 +109,6 @@ public class TwoXAResourcesDemo extends Demo {
         }
     }
 
-    @Transactional
     private Optional<String> jmsGet() {
         try(XAConnection connection = xaConnectionFactory.createXAConnection();
                 XASession session = connection.createXASession();
@@ -134,3 +121,4 @@ public class TwoXAResourcesDemo extends Demo {
         }
     }
 }
+

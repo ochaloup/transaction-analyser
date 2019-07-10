@@ -37,13 +37,13 @@ public class TwoXAResourcesDemoEJB extends Demo {
     private Queue queue;
     
     // This is not injected!
-    /*@Resource
-    private UserTransaction userTransaction; */
+    @Resource
+    private UserTransaction userTransaction;
 
-    /*
+
     public TwoXAResourcesDemoEJB() {
     	super(9, "[EJB backed] Two-phase commit transaction on two different XA resources.", "[EJB backed] Two-phase commit transaction on two different XA resources.");
-    } */
+    }
     
     private static final Logger LOG = Logger.getGlobal();
     

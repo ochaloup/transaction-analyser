@@ -10,8 +10,6 @@ import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -22,7 +20,6 @@ import javax.jms.XAConnectionFactory;
 import javax.jms.XASession;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 
 /**
  * EJB and declarative based transaction programming. 
@@ -31,16 +28,11 @@ import javax.transaction.UserTransaction;
 @Stateless
 public class TwoXAResourcesDemoEJB extends Demo {
     
-	// TODO: annotation lookup still does not work, why?
     @Resource(lookup = "java:/jboss/DummyXaConnectionFactory")
     private XAConnectionFactory xaConnectionFactory;
 
     @Resource(lookup = "java:/jms/queue/DummyQueue")
     private Queue queue;
-    
-    // This is not injected!
-    // @Resource
-    // private UserTransaction userTransaction;
     
     public TwoXAResourcesDemoEJB() {
     	super(9, "[EJB backed] Two-phase commit transaction on two different XA resources.", "[EJB backed] Two-phase commit transaction on two different XA resources.");
@@ -64,26 +56,18 @@ public class TwoXAResourcesDemoEJB extends Demo {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public DemoResult run(TransactionManager tm, EntityManager em) {
     	StringBuilder strBldr = new StringBuilder();
-    	try {
-    		tm.begin();
-    		List<DummyEntity> dummies = prepareDummies();
-        	for (DummyEntity de : dummies) {
-        		dbSave(em, de);
-        	}
-        	for(DummyEntity de : dbGet(em)) {
-        		jmsSend(de.getName());
-        		jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
-        	}
-        	if(new Random().nextInt() % 3 == 0) {
-        	    LOG.fine("Simulating application exception being thrown...");
-        	    throw new DummyAppException();
-        	}
-        	tm.commit();
-        	return new DemoResult(0, "Commited two resources - JMS & DB, message:\n\n" + strBldr.toString());
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
+    	for (DummyEntity de : prepareDummies()) {
+    		dbSave(em, de);
+    	}
+    	for(DummyEntity de : dbGet(em)) {
+    		jmsSend(de.getName());
+    		jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
+    	}
+    	if(new Random().nextInt() % 3 == 0) {
+    	    LOG.fine("Simulating application exception being thrown...");
+    	    throw new DummyAppException();
+    	}
+    	return new DemoResult(0, "Commited two resources - JMS & DB, message:\n\n" + strBldr.toString());
     }
     
     private List<DummyEntity> dbGet(EntityManager em) {

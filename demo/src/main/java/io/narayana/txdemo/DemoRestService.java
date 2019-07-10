@@ -21,8 +21,10 @@
  */
 package io.narayana.txdemo;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.TransactionManager;
@@ -45,20 +47,26 @@ public class DemoRestService {
     @EJB
     private DemoDao dao;
 
+    @EJB
+    TwoXAResourcesDemoEJB twoXAResourcesEJB;
+
+    @Inject
+    TwoXAResourcesDemoCDI twoXAResourcesCDI;
+
     @PersistenceContext
     private EntityManager em;
 
     @Resource(lookup = "java:jboss/TransactionManager")
     private TransactionManager tm;
 
-    public DemoRestService() {
-
+    @PostConstruct
+    public void initDemos() {
         demos.add(new SuccessTransactionDemo());
         demos.add(new TimeoutTransactionDemo());
         demos.add(new PrepareFailDemo());
         demos.add(new ClientDrivenRollbackDemo());
-        demos.add(new TwoXAResourcesDemoEJB());
-        demos.add(new TwoXAResourcesDemoCDI());
+        demos.add(twoXAResourcesEJB);
+        demos.add(twoXAResourcesCDI);
     }
 
     @GET

@@ -67,6 +67,7 @@ public class DemoRestService {
         demos.add(new ClientDrivenRollbackDemo());
         demos.add(twoXAResourcesEJB);
         demos.add(twoXAResourcesCDI);
+        demos.add(new HaltDemo());
     }
 
     @GET

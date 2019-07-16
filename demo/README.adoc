@@ -1,0 +1,3 @@
+= README
+
+Running with `curl -XGET http://localhost:8080/txdemo/rest/demos/9`

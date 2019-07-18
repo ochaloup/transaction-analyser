@@ -18,7 +18,7 @@ public class DummyEntity {
     public DummyEntity(String name) {
     	this.name = name;
     }
-    
+   
     public Long getId() {
         return id;
     }

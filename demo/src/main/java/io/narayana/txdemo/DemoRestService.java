@@ -33,6 +33,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
+import io.jaegertracing.Configuration;
+import io.jaegertracing.Configuration.ReporterConfiguration;
+import io.jaegertracing.Configuration.SamplerConfiguration;
+import io.jaegertracing.Configuration.SenderConfiguration;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +51,7 @@ import java.util.List;
 public class DemoRestService {
 
     private ArrayList<Demo> demos = new ArrayList<>();
+    private static boolean tracingSetup = false;
 
     @EJB
     private DemoDao dao;
@@ -61,6 +70,10 @@ public class DemoRestService {
 
     @PostConstruct
     public void initDemos() {
+    	if(!tracingSetup) {
+    		configureTracing();	
+    	}
+    	
         demos.add(new SuccessTransactionDemo());
         demos.add(new TimeoutTransactionDemo());
         demos.add(new PrepareFailDemo());
@@ -68,6 +81,24 @@ public class DemoRestService {
         demos.add(twoXAResourcesEJB);
         demos.add(twoXAResourcesCDI);
         demos.add(new HaltDemo());
+    }
+    
+    private static void configureTracing() {
+    	SamplerConfiguration samplerConfig = new SamplerConfiguration()
+                .withType("const")
+                .withParam(1);
+            SenderConfiguration senderConfig = new SenderConfiguration()
+                .withAgentHost("localhost")
+                .withAgentPort(5775);
+            ReporterConfiguration reporterConfig = new ReporterConfiguration()
+                .withLogSpans(true)
+                .withFlushInterval(1000)
+                .withMaxQueueSize(10000)
+                .withSender(senderConfig);
+        Tracer tracer = new Configuration("DummyApp").withSampler(samplerConfig).withReporter(reporterConfig).getTracer();
+        GlobalTracer.register(tracer);
+        
+        tracingSetup = true;
     }
 
     @GET

@@ -21,6 +21,12 @@ import javax.jms.XASession;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import io.opentracing.Tracer;
+import io.opentracing.References;
+import io.opentracing.Span;
+import io.opentracing.tag.Tags;
+import io.opentracing.util.GlobalTracer;
+
 /**
  * EJB and declarative based transaction programming.
  *
@@ -61,9 +67,16 @@ public class TwoXAResourcesDemoEJB extends Demo {
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public DemoResult run(TransactionManager tm, EntityManager em) {
 		StringBuilder strBldr = new StringBuilder();
+		Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("INSERT_ENTITIES");
+		
 		for (DummyEntity de : prepareDummies()) {
+			//spanBldr.asChildOf(GlobalTracer.get().scopeManager().active().span());
 			dbSave(em, de);
 		}
+		Span span = spanBldr.start();
+		span.setTag("component", "DummyApp");
+		span.finish();
+		
 		for (DummyEntity de : dbGet(em)) {
 			jmsSend(de.getName());
 			jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));

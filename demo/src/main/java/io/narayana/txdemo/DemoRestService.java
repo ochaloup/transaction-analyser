@@ -83,7 +83,11 @@ public class DemoRestService {
         demos.add(new HaltDemo());
     }
     
-    private static void configureTracing() {
+    /**
+     * The registerIfAbsent is not available since Jaeger uses older API.
+     */
+    @SuppressWarnings("deprecation")
+	private static void configureTracing() {
     	SamplerConfiguration samplerConfig = new SamplerConfiguration()
                 .withType("const")
                 .withParam(1);

@@ -34,12 +34,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
 import io.jaegertracing.Configuration;
 import io.jaegertracing.Configuration.ReporterConfiguration;
 import io.jaegertracing.Configuration.SamplerConfiguration;
 import io.jaegertracing.Configuration.SenderConfiguration;
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,83 +50,76 @@ import java.util.List;
 @Path("/demos")
 public class DemoRestService {
 
-    private ArrayList<Demo> demos = new ArrayList<>();
-    private static boolean tracingSetup = false;
+	private ArrayList<Demo> demos = new ArrayList<>();
+	private static boolean tracingSetup = false;
 
-    @EJB
-    private DemoDao dao;
+	@EJB
+	private DemoDao dao;
 
-    @EJB
-    TwoXAResourcesDemoEJB twoXAResourcesEJB;
+	@EJB
+	TwoXAResourcesDemoEJB twoXAResourcesEJB;
 
-    @Inject
-    TwoXAResourcesDemoCDI twoXAResourcesCDI;
+	@Inject
+	TwoXAResourcesDemoCDI twoXAResourcesCDI;
 
-    @PersistenceContext
-    private EntityManager em;
+	@PersistenceContext
+	private EntityManager em;
 
-    @Resource(lookup = "java:jboss/TransactionManager")
-    private TransactionManager tm;
+	@Resource(lookup = "java:jboss/TransactionManager")
+	private TransactionManager tm;
 
-    @PostConstruct
-    public void initDemos() {
-    	if(!tracingSetup) {
-    		configureTracing();	
-    	}
-    	
-        demos.add(new SuccessTransactionDemo());
-        demos.add(new TimeoutTransactionDemo());
-        demos.add(new PrepareFailDemo());
-        demos.add(new ClientDrivenRollbackDemo());
-        demos.add(twoXAResourcesEJB);
-        demos.add(twoXAResourcesCDI);
-        demos.add(new HaltDemo());
-    }
-    
-    /**
-     * The registerIfAbsent is not available since Jaeger uses older API.
-     */
-    @SuppressWarnings("deprecation")
+	@PostConstruct
+	public void initDemos() {
+		if (!tracingSetup) {
+			configureTracing();
+		}
+
+		demos.add(new SuccessTransactionDemo());
+		demos.add(new TimeoutTransactionDemo());
+		demos.add(new PrepareFailDemo());
+		demos.add(new ClientDrivenRollbackDemo());
+		demos.add(twoXAResourcesEJB);
+		demos.add(twoXAResourcesCDI);
+		demos.add(new HaltDemo());
+	}
+
+	/**
+	 * The registerIfAbsent is not available since Jaeger uses older API.
+	 */
+	@SuppressWarnings("deprecation")
 	private static void configureTracing() {
-    	SamplerConfiguration samplerConfig = new SamplerConfiguration()
-                .withType("const")
-                .withParam(1);
-            SenderConfiguration senderConfig = new SenderConfiguration()
-                .withAgentHost("localhost")
-                .withAgentPort(5775);
-            ReporterConfiguration reporterConfig = new ReporterConfiguration()
-                .withLogSpans(true)
-                .withFlushInterval(1000)
-                .withMaxQueueSize(10000)
-                .withSender(senderConfig);
-        Tracer tracer = new Configuration("DummyApp").withSampler(samplerConfig).withReporter(reporterConfig).getTracer();
-        GlobalTracer.register(tracer);
-        
-        tracingSetup = true;
-    }
+		SamplerConfiguration samplerConfig = new SamplerConfiguration().withType("const").withParam(1);
+		SenderConfiguration senderConfig = new SenderConfiguration().withAgentHost("localhost").withAgentPort(5775);
+		ReporterConfiguration reporterConfig = new ReporterConfiguration().withLogSpans(true).withFlushInterval(1000)
+				.withMaxQueueSize(10000).withSender(senderConfig);
+		Tracer tracer = new Configuration("DummyApp").withSampler(samplerConfig).withReporter(reporterConfig)
+				.getTracer();
+		GlobalTracer.register(tracer);
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Demo> listAllDemos() {
+		tracingSetup = true;
+	}
 
-        return demos;
-    }
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Demo> listAllDemos() {
+		return demos;
+	}
 
-    @GET
-    @Path("/{id:[0-9][0-9]*}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public DemoResult getDemo(@PathParam("id") int id) {
+	@GET
+	@Path("/{id:[0-9][0-9]*}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public DemoResult getDemo(@PathParam("id") int id) {
 
-        for (Demo demo : demos) {
-            if (demo.getId() == id) {
-                try {
-                    return demo.run(tm, em);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return new DemoResult(-2, "exception " + e);
-                }
-            }
-        }
-        return new DemoResult(-1, "no " + id + " demo");
-    }
+		for (Demo demo : demos) {
+			if (demo.getId() == id) {
+				try {
+					return demo.run(tm, em);
+				} catch (Exception e) {
+					e.printStackTrace();
+					return new DemoResult(-2, "exception " + e);
+				}
+			}
+		}
+		return new DemoResult(-1, "no " + id + " demo");
+	}
 }

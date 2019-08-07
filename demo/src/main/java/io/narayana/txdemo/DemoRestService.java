@@ -38,6 +38,8 @@ import io.jaegertracing.Configuration;
 import io.jaegertracing.Configuration.ReporterConfiguration;
 import io.jaegertracing.Configuration.SamplerConfiguration;
 import io.jaegertracing.Configuration.SenderConfiguration;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 
@@ -52,6 +54,7 @@ public class DemoRestService {
 
 	private ArrayList<Demo> demos = new ArrayList<>();
 	private static boolean tracingSetup = false;
+	private static Span root;
 
 	@EJB
 	private DemoDao dao;
@@ -112,14 +115,22 @@ public class DemoRestService {
 
 		for (Demo demo : demos) {
 			if (demo.getId() == id) {
-				try {
+				Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("User TX - wrapper");
+				root = spanBldr.start();
+				try(Scope scope = GlobalTracer.get().activateSpan(root)) {
 					return demo.run(tm, em);
 				} catch (Exception e) {
 					e.printStackTrace();
 					return new DemoResult(-2, "exception " + e);
+				} finally {
+					root.finish();
 				}
 			}
 		}
 		return new DemoResult(-1, "no " + id + " demo");
+	}
+	
+	public static Span getRootSpan() {
+		return root;
 	}
 }

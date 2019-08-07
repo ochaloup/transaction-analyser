@@ -22,9 +22,8 @@ import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
 import io.opentracing.Tracer;
-import io.opentracing.References;
+import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 
 /**
@@ -66,31 +65,46 @@ public class TwoXAResourcesDemoEJB extends Demo {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public DemoResult run(TransactionManager tm, EntityManager em) {
-		StringBuilder strBldr = new StringBuilder();
-		Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("INSERT_ENTITIES");
-		
-		for (DummyEntity de : prepareDummies()) {
-			//spanBldr.asChildOf(GlobalTracer.get().scopeManager().active().span());
-			dbSave(em, de);
-		}
-		Span span = spanBldr.start();
-		span.setTag("component", "DummyApp");
-		span.finish();
-		
-		for (DummyEntity de : dbGet(em)) {
-			jmsSend(de.getName());
-			jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
-		}
+		runJdbcPart(em);
+		String message = runJmsPart(em);
 		randomEvents(RandEvs.NONE);
-		return new DemoResult(0, "Commited two resources - JMS & DB, message:\n\n" + strBldr.toString());
+		return new DemoResult(0, "Commited two resources - JMS & DB, message:\n\n" + message);
+	}
+
+	private void runJdbcPart(EntityManager em) {
+		Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("JDBC");
+		Span span = spanBldr.asChildOf(DemoRestService.getRootSpan()).start();
+		try(Scope scope = GlobalTracer.get().activateSpan(span)) {
+			for (DummyEntity de : prepareDummies()) {
+				spanBldr.asChildOf(GlobalTracer.get().activeSpan());
+				dbSave(em, de);
+			}
+		} finally {
+	    	span.finish();		
+	    }
+	}
+
+	private String runJmsPart(EntityManager em) {
+		StringBuilder strBldr = new StringBuilder();
+		Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("JMS");
+		Span span = spanBldr.asChildOf(DemoRestService.getRootSpan()).start();
+		try(Scope scope = GlobalTracer.get().activateSpan(span)) {
+			for (DummyEntity de : dbGet(em)) {
+				jmsSend(de.getName());
+				jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
+			}	
+		} finally {
+			span.finish();	
+		}
+		return strBldr.toString();
 	}
 
 	private static final void randomEvents(RandEvs re) {
-    	if(re != RandEvs.NONE && new Random().nextInt() % 3 == 0) {
-	    LOG.fine("Simulating application exception being thrown...");
-	    throw new DummyAppException();
+		if (re != RandEvs.NONE && new Random().nextInt() % 3 == 0) {
+			LOG.fine("Simulating application exception being thrown...");
+			throw new DummyAppException();
+		}
 	}
-    }
 
 	private List<DummyEntity> dbGet(EntityManager em) {
 		return em.createQuery("select e from DummyEntity e", DummyEntity.class).getResultList();

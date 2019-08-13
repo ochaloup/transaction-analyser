@@ -22,9 +22,9 @@ import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
 import io.opentracing.Tracer;
+import io.narayana.txdemo.tracing.TracingUtils;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
 
 /**
  * EJB and declarative based transaction programming.
@@ -72,11 +72,11 @@ public class TwoXAResourcesDemoEJB extends Demo {
 	}
 
 	private void runJdbcPart(EntityManager em) {
-		Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("JDBC");
+		Tracer.SpanBuilder spanBldr = TracingUtils.getTracer().buildSpan("JDBC");
 		Span span = spanBldr.asChildOf(DemoRestService.getRootSpan()).start();
-		try(Scope scope = GlobalTracer.get().activateSpan(span)) {
+		try(Scope scope = TracingUtils.getTracer().activateSpan(span)) {
 			for (DummyEntity de : prepareDummies()) {
-				spanBldr.asChildOf(GlobalTracer.get().activeSpan());
+				spanBldr.asChildOf(TracingUtils.getTracer().activeSpan());
 				dbSave(em, de);
 			}
 		} finally {
@@ -86,9 +86,9 @@ public class TwoXAResourcesDemoEJB extends Demo {
 
 	private String runJmsPart(EntityManager em) {
 		StringBuilder strBldr = new StringBuilder();
-		Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("JMS");
+		Tracer.SpanBuilder spanBldr = TracingUtils.getTracer().buildSpan("JMS");
 		Span span = spanBldr.asChildOf(DemoRestService.getRootSpan()).start();
-		try(Scope scope = GlobalTracer.get().activateSpan(span)) {
+		try(Scope scope = TracingUtils.getTracer().activateSpan(span)) {
 			for (DummyEntity de : dbGet(em)) {
 				jmsSend(de.getName());
 				jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));

@@ -34,15 +34,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.jaegertracing.Configuration;
-import io.jaegertracing.Configuration.ReporterConfiguration;
-import io.jaegertracing.Configuration.SamplerConfiguration;
-import io.jaegertracing.Configuration.SenderConfiguration;
+import io.narayana.txdemo.tracing.TracingUtils;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +47,6 @@ import java.util.List;
 public class DemoRestService {
 
 	private ArrayList<Demo> demos = new ArrayList<>();
-	private static boolean tracingSetup = false;
 	private static Span root;
 
 	@EJB
@@ -73,10 +66,6 @@ public class DemoRestService {
 
 	@PostConstruct
 	public void initDemos() {
-		if (!tracingSetup) {
-			configureTracing();
-		}
-
 		demos.add(new SuccessTransactionDemo());
 		demos.add(new TimeoutTransactionDemo());
 		demos.add(new PrepareFailDemo());
@@ -84,22 +73,6 @@ public class DemoRestService {
 		demos.add(twoXAResourcesEJB);
 		demos.add(twoXAResourcesCDI);
 		demos.add(new HaltDemo());
-	}
-
-	/**
-	 * The registerIfAbsent is not available since Jaeger uses older API.
-	 */
-	@SuppressWarnings("deprecation")
-	private static void configureTracing() {
-		SamplerConfiguration samplerConfig = new SamplerConfiguration().withType("const").withParam(1);
-		SenderConfiguration senderConfig = new SenderConfiguration().withAgentHost("localhost").withAgentPort(5775);
-		ReporterConfiguration reporterConfig = new ReporterConfiguration().withLogSpans(true).withFlushInterval(1000)
-				.withMaxQueueSize(10000).withSender(senderConfig);
-		Tracer tracer = new Configuration("DummyApp").withSampler(samplerConfig).withReporter(reporterConfig)
-				.getTracer();
-		GlobalTracer.register(tracer);
-
-		tracingSetup = true;
 	}
 
 	@GET
@@ -115,9 +88,8 @@ public class DemoRestService {
 
 		for (Demo demo : demos) {
 			if (demo.getId() == id) {
-				Tracer.SpanBuilder spanBldr = GlobalTracer.get().buildSpan("User TX - wrapper");
-				root = spanBldr.start();
-				try(Scope scope = GlobalTracer.get().activateSpan(root)) {
+				root = TracingUtils.getTracer().buildSpan("User TX - wrapper").start();
+				try(Scope scope = TracingUtils.getTracer().activateSpan(root)) {
 					return demo.run(tm, em);
 				} catch (Exception e) {
 					e.printStackTrace();

@@ -21,7 +21,6 @@ import javax.jms.XASession;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
-import io.opentracing.Tracer;
 import io.narayana.txdemo.tracing.TracingUtils;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -72,11 +71,9 @@ public class TwoXAResourcesDemoEJB extends Demo {
 	}
 
 	private void runJdbcPart(EntityManager em) {
-		Tracer.SpanBuilder spanBldr = TracingUtils.getTracer().buildSpan("JDBC");
-		Span span = spanBldr.asChildOf(DemoRestService.getRootSpan()).start();
+		Span span = TracingUtils.getTracer().buildSpan("JDBC").start();
 		try(Scope scope = TracingUtils.getTracer().activateSpan(span)) {
 			for (DummyEntity de : prepareDummies()) {
-				spanBldr.asChildOf(TracingUtils.getTracer().activeSpan());
 				dbSave(em, de);
 			}
 		} finally {
@@ -86,8 +83,7 @@ public class TwoXAResourcesDemoEJB extends Demo {
 
 	private String runJmsPart(EntityManager em) {
 		StringBuilder strBldr = new StringBuilder();
-		Tracer.SpanBuilder spanBldr = TracingUtils.getTracer().buildSpan("JMS");
-		Span span = spanBldr.asChildOf(DemoRestService.getRootSpan()).start();
+		Span span = TracingUtils.getTracer().buildSpan("JMS").start();
 		try(Scope scope = TracingUtils.getTracer().activateSpan(span)) {
 			for (DummyEntity de : dbGet(em)) {
 				jmsSend(de.getName());

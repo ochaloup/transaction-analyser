@@ -47,7 +47,6 @@ import java.util.List;
 public class DemoRestService {
 
 	private ArrayList<Demo> demos = new ArrayList<>();
-	private static Span root;
 
 	@EJB
 	private DemoDao dao;
@@ -88,21 +87,17 @@ public class DemoRestService {
 
 		for (Demo demo : demos) {
 			if (demo.getId() == id) {
-				root = TracingUtils.getTracer().buildSpan("User TX - wrapper").start();
-				try(Scope scope = TracingUtils.getTracer().activateSpan(root)) {
+				Span demoSpan = TracingUtils.getTracer().buildSpan(String.format("Demo no. %d run", id)).start();
+				try(Scope scope = TracingUtils.getTracer().activateSpan(demoSpan)) {
 					return demo.run(tm, em);
 				} catch (Exception e) {
 					e.printStackTrace();
 					return new DemoResult(-2, "exception " + e);
 				} finally {
-					root.finish();
+					demoSpan.finish();
 				}
 			}
 		}
 		return new DemoResult(-1, "no " + id + " demo");
-	}
-	
-	public static Span getRootSpan() {
-		return root;
 	}
 }

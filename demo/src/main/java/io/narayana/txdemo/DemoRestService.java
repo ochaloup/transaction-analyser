@@ -84,17 +84,13 @@ public class DemoRestService {
 	@Path("/{id:[0-9][0-9]*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public DemoResult getDemo(@PathParam("id") int id) {
-
 		for (Demo demo : demos) {
 			if (demo.getId() == id) {
-				Span demoSpan = TracingUtils.getTracer().buildSpan(String.format("Demo no. %d run", id)).start();
-				try(Scope scope = TracingUtils.getTracer().activateSpan(demoSpan)) {
+				try {
 					return demo.run(tm, em);
 				} catch (Exception e) {
 					e.printStackTrace();
 					return new DemoResult(-2, "exception " + e);
-				} finally {
-					demoSpan.finish();
 				}
 			}
 		}

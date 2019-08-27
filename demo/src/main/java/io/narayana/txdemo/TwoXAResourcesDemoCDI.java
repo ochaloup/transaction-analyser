@@ -96,7 +96,6 @@ public class TwoXAResourcesDemoCDI extends Demo {
     }
     
     private void jmsSend(final String message) {
-
         try(XAConnection connection = xaConnectionFactory.createXAConnection();
                 XASession session = connection.createXASession();
         		MessageProducer messageProducer = session.createProducer(queue)) {

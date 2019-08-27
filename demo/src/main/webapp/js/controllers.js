@@ -13,3 +13,9 @@ function DemoCtrl($scope, $http, Demo) {
 
     $scope.orderBy = 'id';
 }
+
+function DemoAutoCtrl($scope, $http, DemoAuto) {
+    $scope.perform = function ($action) {
+        DemoAuto.get({act : $action}, function (result) {});
+    };
+}

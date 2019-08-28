@@ -18,6 +18,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.narayana.txdemo.tracing.TracingUtils;
+
 @Path("/demo_auto")
 public class DemoAutomaticStreamService {
 
@@ -45,6 +47,7 @@ public class DemoAutomaticStreamService {
 
 	@PostConstruct
 	public void initDemos() {
+		TracingUtils.getTracer();
 		demosAuto.add(new SuccessTransactionDemo());
 		demosAuto.add(new TimeoutTransactionDemo());
 		demosAuto.add(new PrepareFailDemo());

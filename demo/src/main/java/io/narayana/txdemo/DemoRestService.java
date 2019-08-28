@@ -47,7 +47,7 @@ import java.util.List;
 public class DemoRestService {
 
 	private ArrayList<Demo> demos = new ArrayList<>();
-
+	
 	@EJB
 	private DemoDao dao;
 
@@ -65,6 +65,7 @@ public class DemoRestService {
 
 	@PostConstruct
 	public void initDemos() {
+		TracingUtils.getTracer();
 		demos.add(new SuccessTransactionDemo());
 		demos.add(new TimeoutTransactionDemo());
 		demos.add(new PrepareFailDemo());

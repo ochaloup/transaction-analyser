@@ -4,5 +4,5 @@ angular.module('demoService', ['ngResource']).
     });
 angular.module('demoAutoService', ['ngResource']).
 factory('DemoAuto', function ($resource) {
-    return $resource('rest/demo_auto/:act', {});
+    return $resource('rest/demo_auto/:noTrans', {});
 });

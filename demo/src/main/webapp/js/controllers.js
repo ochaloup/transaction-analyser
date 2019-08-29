@@ -15,7 +15,10 @@ function DemoCtrl($scope, $http, Demo) {
 }
 
 function DemoAutoCtrl($scope, $http, DemoAuto) {
-    $scope.perform = function ($action) {
-        DemoAuto.get({act : $action}, function (result) {});
+	$scope.value = 1;
+	$scope.min = 1;
+	$scope.max = 50;
+    $scope.perform = function () {
+        DemoAuto.get({noTrans : $scope.value}, function (result) {});
     };
 }

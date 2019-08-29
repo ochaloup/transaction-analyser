@@ -26,7 +26,7 @@ public class DemoAutomaticStreamService {
 	private final AtomicBoolean active = new AtomicBoolean(true);
 	private ArrayList<Demo> demosAuto = new ArrayList<>();
 	/**
-	 * number of transactions which will be spawned on a click of the "start" button in the UI
+	 * cap for the number of transactions which will be spawned on a click of the "start" button in the UI
 	 */
 	private static final int NO_TRANS = 50;
 	
@@ -66,12 +66,12 @@ public class DemoAutomaticStreamService {
 	}
 
 	@GET
-	@Path("/start")
-	public void action() {
+	@Path("/{noTrans:[0-9][0-9]*}")
+	public void action(@PathParam("noTrans") int noTrans) {
 		new Runnable() {
 			@Override
 			public void run() {
-				new Random().ints(NO_TRANS).forEach(i -> runOneDemo(i));
+				new Random().ints(noTrans % NO_TRANS).forEach(i -> runOneDemo(i));
 			}
 		}.run();
 	}

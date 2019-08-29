@@ -1,3 +1,7 @@
 <tr>
-    <td><input type="button" ng-click="perform('start')" name="start" value="Start"/></td>
+    <td><input type="button" ng-click="perform()" name="start" value="Start"/></td>
+    <td>
+        <span>number of transactions <code>{{value}}</code></span>
+        <span style="background-color:#ddd;"><input type="range" name="range" ng-model="value" min="{{min}}"  max="{{max}}"></span>
+    </td>
 </tr>

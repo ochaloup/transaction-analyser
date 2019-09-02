@@ -1,9 +1,11 @@
 package io.narayana.txdemo;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -15,21 +17,21 @@ import javax.transaction.TransactionManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 import io.narayana.txdemo.tracing.TracingUtils;
 
 @Path("/demo_auto")
 public class DemoAutomaticStreamService {
 
-	private final AtomicBoolean active = new AtomicBoolean(true);
 	private ArrayList<Demo> demosAuto = new ArrayList<>();
+	private static final int PARALELISM_DEGREE = 4;
+	private ExecutorService pool;
 	/**
-	 * cap for the number of transactions which will be spawned on a click of the "start" button in the UI
+	 * cap for the number of transactions which will be spawned on a click of the
+	 * "start" button in the UI
 	 */
 	private static final int NO_TRANS = 50;
-	
+
 	@EJB
 	private DemoDao dao;
 
@@ -56,23 +58,29 @@ public class DemoAutomaticStreamService {
 		demosAuto.add(twoXAResourcesCDI);
 	}
 
-	private DemoResult runOneDemo(int demoIndex) {
+	private void runOneDemo(int demoIndex) {
 		try {
-			return demosAuto.get(demoIndex % demosAuto.size()).run(tm, em);
+			demosAuto.get(demoIndex % demosAuto.size()).run(tm, em);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new DemoResult(-2, "exception " + e);
+			new DemoResult(-2, "exception " + e);
 		}
 	}
 
 	@GET
 	@Path("/{noTrans:[0-9][0-9]*}")
 	public void action(@PathParam("noTrans") int noTrans) {
-		new Runnable() {
-			@Override
-			public void run() {
-				new Random().ints(noTrans % NO_TRANS).forEach(i -> runOneDemo(i));
-			}
-		}.run();
+		Iterator<Integer> stream = new Random().ints(noTrans % NO_TRANS, 1, demosAuto.size()).iterator();
+		pool = Executors.newFixedThreadPool(PARALELISM_DEGREE);
+		while (stream.hasNext()) {
+			int n = stream.next();
+			pool.execute(() -> runOneDemo(n));
+		}
+		pool.shutdown();
+		try {
+			pool.awaitTermination(1, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

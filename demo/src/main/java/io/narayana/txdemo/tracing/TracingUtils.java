@@ -54,7 +54,7 @@ public class TracingUtils {
 				.withAgentPort(Integer.decode(config.getProperty("jaeger.reporter_port")));
 		ReporterConfiguration reporterConfig = new ReporterConfiguration().withLogSpans(true).withFlushInterval(1000)
 				.withMaxQueueSize(10000).withSender(senderConfig);
-		return new Configuration("global").withSampler(samplerConfig).withReporter(reporterConfig).getTracer();
+		return new Configuration("tx-demo").withSampler(samplerConfig).withReporter(reporterConfig).getTracer();
 	}
 
 	private static Properties loadConfig() {

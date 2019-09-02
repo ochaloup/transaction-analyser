@@ -86,33 +86,24 @@ public class TwoXAResourcesDemoCDI extends Demo {
 	}
 
 	private Long dbSave(EntityManager em, DummyEntity quickstartEntity) {
-		Span span = TracingUtils.getTracer().buildSpan("JDBC").start();
-		try (Scope scope = TracingUtils.getTracer().activateSpan(span)) {
-			if (quickstartEntity.isTransient()) {
-				em.persist(quickstartEntity);
-			} else {
-				em.merge(quickstartEntity);
-			}
-			return quickstartEntity.getId();
-		} finally {
-			span.finish();
+		if (quickstartEntity.isTransient()) {
+			em.persist(quickstartEntity);
+		} else {
+			em.merge(quickstartEntity);
 		}
+		return quickstartEntity.getId();
 	}
 
 	private void jmsSend(final String message) {
-		Span span = TracingUtils.getTracer().buildSpan("JMS - send message").start();
 		try (XAConnection connection = xaConnectionFactory.createXAConnection();
 				XASession session = connection.createXASession();
-				MessageProducer messageProducer = session.createProducer(queue);
-				Scope scope = TracingUtils.getTracer().activateSpan(span)) {
+				MessageProducer messageProducer = session.createProducer(queue)) {
 			connection.start();
 			TextMessage textMessage = session.createTextMessage();
 			textMessage.setText(message);
 			messageProducer.send(textMessage);
 		} catch (JMSException e) {
 			throw new RuntimeException(e.getMessage(), e);
-		} finally {
-			span.finish();
 		}
 	}
 

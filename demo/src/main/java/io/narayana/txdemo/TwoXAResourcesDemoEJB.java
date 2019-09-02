@@ -71,26 +71,16 @@ public class TwoXAResourcesDemoEJB extends Demo {
 	}
 
 	private void runJdbcPart(EntityManager em) {
-		Span span = TracingUtils.getTracer().buildSpan("JDBC").start();
-		try(Scope scope = TracingUtils.getTracer().activateSpan(span)) {
-			for (DummyEntity de : prepareDummies()) {
-				dbSave(em, de);
-			}
-		} finally {
-	    	span.finish();		
-	    }
+		for (DummyEntity de : prepareDummies()) {
+			dbSave(em, de);
+		}
 	}
 
 	private String runJmsPart(EntityManager em) {
 		StringBuilder strBldr = new StringBuilder();
-		Span span = TracingUtils.getTracer().buildSpan("JMS").start();
-		try(Scope scope = TracingUtils.getTracer().activateSpan(span)) {
-			for (DummyEntity de : dbGet(em)) {
-				jmsSend(de.getName());
-				jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
-			}	
-		} finally {
-			span.finish();	
+		for (DummyEntity de : dbGet(em)) {
+			jmsSend(de.getName());
+			jmsGet().ifPresent(dummy -> strBldr.append(dummy + "\n"));
 		}
 		return strBldr.toString();
 	}

@@ -30,21 +30,20 @@
 	<packaging>war</packaging>
 
 	<properties>
-	    <jaeger.version>0.35.5</jaeger.version>
+		<jaeger.version>0.35.5</jaeger.version>
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>io.opentracing.contrib</groupId>
+			<artifactId>opentracing-jms-2</artifactId>
+			<version>0.1.6</version>
+		</dependency>
 		<dependency>
 			<groupId>io.jaegertracing</groupId>
 			<artifactId>jaeger-core</artifactId>
 			<version>${jaeger.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>javax.jms</groupId>
-			<artifactId>javax.jms-api</artifactId>
-			<version>2.0</version>
-		</dependency>
-
 		<dependency>
 			<groupId>javax.transaction</groupId>
 			<artifactId>javax.transaction-api</artifactId>

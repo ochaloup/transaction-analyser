@@ -60,17 +60,16 @@ public class DemoAutomaticStreamService {
 
 	private void runOneDemo(int demoIndex) {
 		try {
-			demosAuto.get(demoIndex % demosAuto.size()).run(tm, em);
+			demosAuto.get(demoIndex).run(tm, em);
 		} catch (Exception e) {
 			e.printStackTrace();
-			new DemoResult(-2, "exception " + e);
 		}
 	}
 
 	@GET
 	@Path("/{noTrans:[0-9][0-9]*}")
 	public void action(@PathParam("noTrans") int noTrans) {
-		Iterator<Integer> stream = new Random().ints(noTrans % NO_TRANS, 1, demosAuto.size()).iterator();
+		Iterator<Integer> stream = new Random().ints(noTrans % (NO_TRANS + 1), 0, demosAuto.size()).iterator();
 		pool = Executors.newFixedThreadPool(PARALELISM_DEGREE);
 		while (stream.hasNext()) {
 			int n = stream.next();

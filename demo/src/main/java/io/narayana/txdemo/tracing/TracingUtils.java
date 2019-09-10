@@ -32,7 +32,7 @@ public class TracingUtils {
 
 	private static void initializeTracer(Properties config) {
 		if (tracer != null) {
-			throw new IllegalStateException("The tracer has already been created and registered. Aborting...");
+			throw new IllegalStateException("The tracer has already been created and registered.");
 		}
 		switch (Tracers.valueOf(config.getProperty("tracer").toUpperCase())) {
 		case JAEGER:
@@ -46,7 +46,7 @@ public class TracingUtils {
 		}
 		GlobalTracer.registerIfAbsent(tracer);
 	}
-	
+
 	static Tracer getJaegerTracer(Properties config) {
 		SamplerConfiguration samplerConfig = new SamplerConfiguration().withType("const").withParam(1);
 		SenderConfiguration senderConfig = new SenderConfiguration()

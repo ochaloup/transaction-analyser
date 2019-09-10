@@ -27,13 +27,13 @@ class TracerLoggingDecorator implements Tracer {
 	@Override
 	public Span activeSpan() {
 		Span s = tracer.activeSpan();
-		logger.error(String.format("retrieving active span '%s'", s == null ? "N/A" : s.toString()));
+		logger.trace(String.format("retrieving active span '%s'", s == null ? "N/A" : s.toString()));
 		return s;
 	}
 
 	@Override
 	public Scope activateSpan(Span span) {
-		logger.error(String.format("activating span '%s'", span == null ? "N/A" : span.toString()));
+		logger.debug(String.format("activating span '%s'", span == null ? "N/A" : span.toString()));
 		return tracer.activateSpan(span);
 	}
 

@@ -11,7 +11,7 @@ public class TimeoutWithRecoveryDemo extends Demo {
 
 	public TimeoutWithRecoveryDemo() {
 
-		super(2, "Transaction Timeout With Recovery", "The passed XAResources force the recovery manager to run a (proper) recovery. First, two dummy XAResources"
+		super(25, "Transaction Timeout With Recovery", "The passed XAResources force the recovery manager to run a (proper) recovery. First, two dummy XAResources"
 				+ "are enlisted and after that, a rollback of the transaction is initiated.");
 	}
 
@@ -23,7 +23,8 @@ public class TimeoutWithRecoveryDemo extends Demo {
 		tm.getTransaction().enlistResource(new DummyPersistentXAResource("demo1", FaultType.FIRST_ROLLBACK_RMFAIL));
 		tm.getTransaction().enlistResource(new DummyPersistentXAResource("demo2", FaultType.PREPARE_FAIL));
 		
-		tm.rollback();
+		create(em, "test");
+		tm.commit();
 
 		return new DemoResult(0, "client driven rollback with recovery");
 	}

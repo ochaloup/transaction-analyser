@@ -66,6 +66,26 @@ public abstract class Demo {
         data.setName(name);
         em.persist(data);
     }
+    
+    @Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		return result;
+	}
 
-    public abstract DemoResult run(TransactionManager utx, EntityManager em) throws Exception;
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Demo)) {
+			return false;
+		}
+		Demo other = (Demo) obj;
+		return id == other.id;
+	}
+
+	public abstract DemoResult run(TransactionManager utx, EntityManager em) throws Exception;
 }

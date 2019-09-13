@@ -64,7 +64,7 @@ final class DummyPersistentXAResourceStorage {
         String jbossServerDataDirName = System.getProperty("jboss.server.data.dir");
         File logDir = new File(jbossServerDataDirName);
         if(jbossServerDataDirName == null || !logDir.exists()) {
-            throw new IllegalStateException("Cannot get directory for the MockXAResource txn log storage "
+            throw new IllegalStateException("Cannot get directory for the DummyPersistentXAResource txn log storage "
                     + "which is expected to be defined by property 'jboss.server.data.dir' and comes with value '" + jbossServerDataDirName + "'");
         }
 

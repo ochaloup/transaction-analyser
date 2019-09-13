@@ -18,7 +18,7 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
     private static Logger log = Logger.getLogger(DummyPersistentXAResourceInitializer.class);
 	private String name;
 	private FaultType fault = FaultType.NONE;
-	private boolean noRollbackYet = true;
+	private static boolean noRollbackYet = true;
 	private int transactionTimeout;
 
 	public enum FaultType {
@@ -42,6 +42,7 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
 	public void commit(Xid xid, boolean b) throws XAException {
 		if (fault == FaultType.TIMEOUT)
 			throw new XAException(XAException.XA_RBTIMEOUT);
+		removeLog(xid);
 	}
 
 	@Override
@@ -50,23 +51,28 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
 
 	@Override
 	public void forget(Xid xid) throws XAException {
+		log.infof("forget '%s' xid:[%s]", this, xid);
+        removeLog(xid);
 	}
 
 	@Override
 	public int getTransactionTimeout() throws XAException {
-		return 0;
+		return transactionTimeout;
 	}
 
 	@Override
 	public boolean isSameRM(XAResource xaResource) throws XAException {
-		return this.equals(xaResource);
+		return false;
 	}
 
 	@Override
 	public int prepare(Xid xid) throws XAException {
+		log.infof("prepare '%s' xid: [%s]", this, xid);
 		if (fault == FaultType.PREPARE_FAIL) {
 			throw new XAException(XAException.XAER_RMFAIL);
 		}
+		preparedXids.add(xid);
+        DummyPersistentXAResourceStorage.writeToDisk(preparedXids);
 		return XAResource.XA_OK;
 	}
 
@@ -82,6 +88,8 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
 			noRollbackYet = false;
 			throw new XAException(XAException.XAER_RMFAIL);
 		}
+		log.infof("rollback '%s' xid: [%s]", this, xid);
+        removeLog(xid);
 	}
 
 	@Override
@@ -106,7 +114,6 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
     private void removeLog(Xid xid) {
         preparedXids.remove(xid);
         DummyPersistentXAResourceStorage.writeToDisk(preparedXids);
-        // currentXid = null;
     }
      
     @Override
@@ -117,7 +124,7 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
 
     @Override
     public String getProductName() {
-        return DummyPersistentXAResource.class.getSimpleName() + " Test";
+        return DummyPersistentXAResource.class.getSimpleName();
     }
 
     @Override

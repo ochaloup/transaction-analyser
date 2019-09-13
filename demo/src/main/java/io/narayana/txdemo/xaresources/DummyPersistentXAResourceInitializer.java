@@ -23,7 +23,7 @@ public class DummyPersistentXAResourceInitializer {
      */
     @PostConstruct
     public void postConstruct() {
-        log.infof("Adding instance of the MockXAResourceRecoveryHelper '%s' to XARecoveryModule", DummyPersistentXAResourceRecoveryHelper.INSTANCE);
+        log.infof("Adding instance of the DummyPersistentXAResourceRecoveryHelper '%s' to XARecoveryModule", DummyPersistentXAResourceRecoveryHelper.INSTANCE);
         getRecoveryModule().addXAResourceRecoveryHelper(DummyPersistentXAResourceRecoveryHelper.INSTANCE);
         DummyPersistentXAResource.initPreparedXids(DummyPersistentXAResourceStorage.recoverFromDisk());
     }
@@ -33,7 +33,7 @@ public class DummyPersistentXAResourceInitializer {
      */
     @PreDestroy
     public void preDestroy() {
-        log.infof("Stopping MockXAResource initializer by removing instance of helper '%s' from XARecoveryModule", DummyPersistentXAResourceRecoveryHelper.INSTANCE);
+        log.infof("Stopping DummyPersistentXAResource initializer by removing instance of helper '%s' from XARecoveryModule", DummyPersistentXAResourceRecoveryHelper.INSTANCE);
         getRecoveryModule().removeXAResourceRecoveryHelper(DummyPersistentXAResourceRecoveryHelper.INSTANCE);
     }
 

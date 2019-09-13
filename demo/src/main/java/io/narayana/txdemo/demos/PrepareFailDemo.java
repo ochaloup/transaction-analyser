@@ -19,10 +19,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
+
+import io.narayana.txdemo.DemoResult;
+import io.narayana.txdemo.xaresources.DummyXAResource;
 
 /**
  * @author <a href="mailto:zfeng@redhat.com">Amos Feng</a>
@@ -40,8 +43,8 @@ public class PrepareFailDemo extends Demo {
 
         tm.begin();
 
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo1"));
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo2", DemoDummyXAResource.faultType.PREPARE_FAIL));
+        tm.getTransaction().enlistResource(new DummyXAResource("demo1"));
+        tm.getTransaction().enlistResource(new DummyXAResource("demo2", DummyXAResource.FaultType.PREPARE_FAIL));
         create(em, "prepare_fail");
 
         tm.commit();

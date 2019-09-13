@@ -19,37 +19,53 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import io.narayana.txdemo.DemoData;
+import io.narayana.txdemo.DemoResult;
+
 /**
  * @author <a href="mailto:zfeng@redhat.com">Amos Feng</a>
  */
-public class TimeoutTransactionDemo extends Demo {
+public abstract class Demo {
 
-    public TimeoutTransactionDemo() {
+    private int id;
+    private String name;
+    private String desc;
 
-        super(2, "Transaction Timeout", "This demo sets the transaction timeout to 1 second and then sleeps for 2 seconds " +
-                "after the transaction has begun. This simulates a transaction timeout due to slow business logic." +
-                "The transaction outcome is TIMEOUT");
+    public Demo() {
+
     }
 
-    @Override
-    public DemoResult run(TransactionManager tm, EntityManager em) throws Exception {
+    public Demo(int id, String name, String desc) {
 
-
-        tm.setTransactionTimeout(1);
-        tm.begin();
-
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo1"));
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo2"));
-        create(em, "timeout");
-        Thread.sleep(2000);
-
-        tm.commit();
-
-        return new DemoResult(-1, "should throw rollback exception");
+        this.id = id;
+        this.name = name;
+        this.desc = desc;
     }
+
+    public String getName() {
+
+        return name;
+    }
+
+    public int getId() {
+
+        return id;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void create(EntityManager em, String name) {
+        DemoData data = new DemoData();
+        data.setName(name);
+        em.persist(data);
+    }
+
+    public abstract DemoResult run(TransactionManager utx, EntityManager em) throws Exception;
 }

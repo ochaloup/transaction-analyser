@@ -1,4 +1,4 @@
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +14,15 @@ import javax.jms.XAConnectionFactory;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import io.narayana.txdemo.DemoResult;
+import io.narayana.txdemo.DummyEntity;
+
 /**
  * EJB and declarative based transaction programming.
  *
  */
 @Stateless
-public class TwoXAResourcesDemoEJB extends TwoResourcesDemo {
+public class TwoXAResourcesEjbDemo extends TwoResourcesDemo {
 
 	@Resource(lookup = "java:/jboss/DummyXaConnectionFactory")
 	private XAConnectionFactory xaConnectionFactory;
@@ -27,7 +30,7 @@ public class TwoXAResourcesDemoEJB extends TwoResourcesDemo {
 	@Resource(lookup = "java:/jms/queue/DummyQueue")
 	private Queue queue;
 
-	public TwoXAResourcesDemoEJB() {
+	public TwoXAResourcesEjbDemo() {
 		super(9, "[EJB backed] Two-phase commit transaction on two different XA resources.",
 				"[EJB backed] Two-phase commit transaction on two different XA resources.");
 	}

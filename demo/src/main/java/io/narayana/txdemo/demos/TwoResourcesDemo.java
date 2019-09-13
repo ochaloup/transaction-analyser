@@ -1,4 +1,4 @@
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +9,7 @@ import javax.jms.TextMessage;
 import javax.jms.XAConnectionFactory;
 import javax.persistence.EntityManager;
 
+import io.narayana.txdemo.DummyEntity;
 import io.narayana.txdemo.tracing.TracingUtils;
 import io.opentracing.contrib.jms.common.TracingMessageConsumer;
 import io.opentracing.contrib.jms2.TracingConnection;

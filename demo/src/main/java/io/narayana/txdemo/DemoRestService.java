@@ -34,9 +34,17 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import io.narayana.txdemo.demos.ClientDrivenRollbackDemo;
+import io.narayana.txdemo.demos.Demo;
+import io.narayana.txdemo.demos.DemoHelper;
+import io.narayana.txdemo.demos.HaltDemo;
+import io.narayana.txdemo.demos.PrepareFailDemo;
+import io.narayana.txdemo.demos.SuccessTransactionDemo;
+import io.narayana.txdemo.demos.TimeoutTransactionDemo;
+import io.narayana.txdemo.demos.TimeoutWithRecoveryDemo;
+import io.narayana.txdemo.demos.TwoXAResourcesCdiDemo;
+import io.narayana.txdemo.demos.TwoXAResourcesEjbDemo;
 import io.narayana.txdemo.tracing.TracingUtils;
-import io.opentracing.Scope;
-import io.opentracing.Span;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,10 +60,10 @@ public class DemoRestService {
 	private DemoDao dao;
 
 	@EJB
-	TwoXAResourcesDemoEJB twoXAResourcesEJB;
+	TwoXAResourcesEjbDemo twoXAResourcesEJB;
 
 	@Inject
-	TwoXAResourcesDemoCDI twoXAResourcesCDI;
+	TwoXAResourcesCdiDemo twoXAResourcesCDI;
 
 	@PersistenceContext
 	private EntityManager em;
@@ -66,10 +74,7 @@ public class DemoRestService {
 	@PostConstruct
 	public void initDemos() {
 		TracingUtils.getTracer();
-		demos.add(new SuccessTransactionDemo());
-		demos.add(new TimeoutTransactionDemo());
-		demos.add(new PrepareFailDemo());
-		demos.add(new ClientDrivenRollbackDemo());
+		demos.addAll(DemoHelper.getCommonDemos());
 		demos.add(twoXAResourcesEJB);
 		demos.add(twoXAResourcesCDI);
 		demos.add(new HaltDemo());

@@ -19,50 +19,36 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import io.narayana.txdemo.DemoResult;
+import io.narayana.txdemo.xaresources.DummyXAResource;
+
 /**
  * @author <a href="mailto:zfeng@redhat.com">Amos Feng</a>
  */
-public abstract class Demo {
+public class ClientDrivenRollbackDemo extends Demo {
 
-    private int id;
-    private String name;
-    private String desc;
+    public ClientDrivenRollbackDemo() {
 
-    public Demo() {
-
+        super(4, "Client-driven Rollback", "This demo enlists three resources. Two are dummies and the third is a database. " +
+                "The business logic calls rollback and the transaction outcome is PHASE_ONE_ABORT");
     }
 
-    public Demo(int id, String name, String desc) {
+    @Override
+    public DemoResult run(TransactionManager tm, EntityManager em) throws Exception {
 
-        this.id = id;
-        this.name = name;
-        this.desc = desc;
+        tm.begin();
+
+        tm.getTransaction().enlistResource(new DummyXAResource("demo1"));
+        tm.getTransaction().enlistResource(new DummyXAResource("demo2"));
+        create(em, "client_rollback");
+
+        tm.rollback();
+
+        return new DemoResult(0, "client rollback");
     }
-
-    public String getName() {
-
-        return name;
-    }
-
-    public int getId() {
-
-        return id;
-    }
-
-    public String getDesc() {
-        return desc;
-    }
-
-    public void create(EntityManager em, String name) {
-        DemoData data = new DemoData();
-        data.setName(name);
-        em.persist(data);
-    }
-
-    public abstract DemoResult run(TransactionManager utx, EntityManager em) throws Exception;
 }

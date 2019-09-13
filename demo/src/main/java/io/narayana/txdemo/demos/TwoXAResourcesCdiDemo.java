@@ -1,4 +1,4 @@
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +12,15 @@ import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
+
+import io.narayana.txdemo.DemoResult;
+import io.narayana.txdemo.DummyEntity;
 /**
  * CDI and declarative based transaction programming.
  *
  */
 @RequestScoped
-public class TwoXAResourcesDemoCDI extends TwoResourcesDemo {
+public class TwoXAResourcesCdiDemo extends TwoResourcesDemo {
 
 	// TODO: annotation lookup does not work, why?
 	// org.jboss.weld.exceptions.DeploymentException: WELD-001408
@@ -27,7 +30,7 @@ public class TwoXAResourcesDemoCDI extends TwoResourcesDemo {
 	// @Inject
 	private Queue queue;
 
-	public TwoXAResourcesDemoCDI() {
+	public TwoXAResourcesCdiDemo() {
 		super(9, "[CDI backed] Two-phase commit transaction on two different XA resources.",
 				"[CDI backed] Two-phase commit transaction on two different XA resources.");
 	}

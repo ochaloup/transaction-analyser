@@ -1,7 +1,10 @@
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
+
+import io.narayana.txdemo.DemoResult;
+import io.narayana.txdemo.xaresources.DummyXAResource;
 
 public class HaltDemo extends Demo {
 
@@ -14,8 +17,8 @@ public class HaltDemo extends Demo {
 
         tm.begin();
 
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo1"));
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo2"));
+        tm.getTransaction().enlistResource(new DummyXAResource("demo1"));
+        tm.getTransaction().enlistResource(new DummyXAResource("demo2"));
         create(em, "test");
 
         System.exit(-1);

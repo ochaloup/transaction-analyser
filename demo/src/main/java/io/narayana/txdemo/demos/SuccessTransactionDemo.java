@@ -19,20 +19,23 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import io.narayana.txdemo.DemoResult;
+import io.narayana.txdemo.xaresources.DummyXAResource;
+
 /**
  * @author <a href="mailto:zfeng@redhat.com">Amos Feng</a>
  */
-public class ClientDrivenRollbackDemo extends Demo {
+public class SuccessTransactionDemo extends Demo {
 
-    public ClientDrivenRollbackDemo() {
+    public SuccessTransactionDemo() {
 
-        super(4, "Client-driven Rollback", "This demo enlists three resources. Two are dummies and the third is a database. " +
-                "The business logic calls rollback and the transaction outcome is PHASE_ONE_ABORT");
+        super(1, "Successful Transaction", "This demo enlists three resources. Two are dummies and the third is a database. " +
+                "All participants commit successfully and the transaction outcome is COMMITTED");
     }
 
     @Override
@@ -40,12 +43,12 @@ public class ClientDrivenRollbackDemo extends Demo {
 
         tm.begin();
 
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo1"));
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo2"));
-        create(em, "client_rollback");
+        tm.getTransaction().enlistResource(new DummyXAResource("demo1"));
+        tm.getTransaction().enlistResource(new DummyXAResource("demo2"));
+        create(em, "test");
 
-        tm.rollback();
+        tm.commit();
 
-        return new DemoResult(0, "client rollback");
+        return new DemoResult(0, "commit ok");
     }
 }

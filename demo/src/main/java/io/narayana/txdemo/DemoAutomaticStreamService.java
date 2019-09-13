@@ -18,6 +18,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
+import io.narayana.txdemo.demos.ClientDrivenRollbackDemo;
+import io.narayana.txdemo.demos.Demo;
+import io.narayana.txdemo.demos.DemoHelper;
+import io.narayana.txdemo.demos.PrepareFailDemo;
+import io.narayana.txdemo.demos.SuccessTransactionDemo;
+import io.narayana.txdemo.demos.TimeoutTransactionDemo;
+import io.narayana.txdemo.demos.TimeoutWithRecoveryDemo;
+import io.narayana.txdemo.demos.TwoXAResourcesCdiDemo;
+import io.narayana.txdemo.demos.TwoXAResourcesEjbDemo;
 import io.narayana.txdemo.tracing.TracingUtils;
 
 @Path("/demo_auto")
@@ -36,10 +45,10 @@ public class DemoAutomaticStreamService {
 	private DemoDao dao;
 
 	@EJB
-	TwoXAResourcesDemoEJB twoXAResourcesEJB;
+	TwoXAResourcesEjbDemo twoXAResourcesEJB;
 
 	@Inject
-	TwoXAResourcesDemoCDI twoXAResourcesCDI;
+	TwoXAResourcesCdiDemo twoXAResourcesCDI;
 
 	@PersistenceContext
 	private EntityManager em;
@@ -50,10 +59,7 @@ public class DemoAutomaticStreamService {
 	@PostConstruct
 	public void initDemos() {
 		TracingUtils.getTracer();
-		demosAuto.add(new SuccessTransactionDemo());
-		demosAuto.add(new TimeoutTransactionDemo());
-		demosAuto.add(new PrepareFailDemo());
-		demosAuto.add(new ClientDrivenRollbackDemo());
+		demosAuto.addAll(DemoHelper.getCommonDemos());
 		demosAuto.add(twoXAResourcesEJB);
 		demosAuto.add(twoXAResourcesCDI);
 	}

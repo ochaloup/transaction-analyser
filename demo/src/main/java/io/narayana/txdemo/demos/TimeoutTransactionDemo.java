@@ -19,33 +19,40 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package io.narayana.txdemo;
+package io.narayana.txdemo.demos;
 
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import io.narayana.txdemo.DemoResult;
+import io.narayana.txdemo.xaresources.DummyXAResource;
+
 /**
  * @author <a href="mailto:zfeng@redhat.com">Amos Feng</a>
  */
-public class SuccessTransactionDemo extends Demo {
+public class TimeoutTransactionDemo extends Demo {
 
-    public SuccessTransactionDemo() {
+    public TimeoutTransactionDemo() {
 
-        super(1, "Successful Transaction", "This demo enlists three resources. Two are dummies and the third is a database. " +
-                "All participants commit successfully and the transaction outcome is COMMITTED");
+        super(2, "Transaction Timeout", "This demo sets the transaction timeout to 1 second and then sleeps for 2 seconds " +
+                "after the transaction has begun. This simulates a transaction timeout due to slow business logic." +
+                "The transaction outcome is TIMEOUT");
     }
 
     @Override
     public DemoResult run(TransactionManager tm, EntityManager em) throws Exception {
 
+
+        tm.setTransactionTimeout(1);
         tm.begin();
 
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo1"));
-        tm.getTransaction().enlistResource(new DemoDummyXAResource("demo2"));
-        create(em, "test");
+        tm.getTransaction().enlistResource(new DummyXAResource("demo1"));
+        tm.getTransaction().enlistResource(new DummyXAResource("demo2"));
+        create(em, "timeout");
+        Thread.sleep(2000);
 
         tm.commit();
 
-        return new DemoResult(0, "commit ok");
+        return new DemoResult(-1, "should throw rollback exception");
     }
 }

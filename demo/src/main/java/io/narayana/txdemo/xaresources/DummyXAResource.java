@@ -19,7 +19,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package io.narayana.txdemo;
+package io.narayana.txdemo.xaresources;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
@@ -27,24 +27,29 @@ import javax.transaction.xa.Xid;
 import java.io.Serializable;
 
 /**
+ * A really minimalistic XAResource implementation which does not do anything.
+ * 
+ * This XAResource is not suitable for demos which deal with recovery as this
+ * XAResource will never be backed up by "real" data.
+ * 
  * @author <a href="mailto:zfeng@redhat.com">Amos Feng</a>
  */
-public class DemoDummyXAResource implements XAResource, Serializable {
+public class DummyXAResource implements XAResource, Serializable {
 
-    public enum faultType {TIMEOUT, PREPARE_FAIL, NONE}
+    public enum FaultType {TIMEOUT, PREPARE_FAIL, NONE}
 
     ;
 
     private String name;
 
-    private faultType fault = faultType.NONE;
+    private FaultType fault = FaultType.NONE;
 
-    public DemoDummyXAResource(String name) {
+    public DummyXAResource(String name) {
 
-        this(name, faultType.NONE);
+        this(name, FaultType.NONE);
     }
 
-    public DemoDummyXAResource(String name, faultType fault) {
+    public DummyXAResource(String name, FaultType fault) {
 
         this.name = name;
         this.fault = fault;
@@ -53,7 +58,7 @@ public class DemoDummyXAResource implements XAResource, Serializable {
     @Override
     public void commit(Xid xid, boolean b) throws XAException {
 
-        if (fault == faultType.TIMEOUT) throw new XAException(XAException.XA_RBTIMEOUT);
+        if (fault == FaultType.TIMEOUT) throw new XAException(XAException.XA_RBTIMEOUT);
     }
 
     @Override
@@ -81,7 +86,7 @@ public class DemoDummyXAResource implements XAResource, Serializable {
     @Override
     public int prepare(Xid xid) throws XAException {
 
-        if (fault == faultType.PREPARE_FAIL) {
+        if (fault == FaultType.PREPARE_FAIL) {
             throw new XAException(XAException.XAER_RMFAIL);
         }
         return XAResource.XA_OK;

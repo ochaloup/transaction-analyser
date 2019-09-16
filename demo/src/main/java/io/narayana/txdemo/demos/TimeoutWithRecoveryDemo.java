@@ -1,5 +1,7 @@
 package io.narayana.txdemo.demos;
 
+import java.sql.Timestamp;
+
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
@@ -19,9 +21,9 @@ public class TimeoutWithRecoveryDemo extends Demo {
 	public DemoResult run(TransactionManager tm, EntityManager em) throws Exception {
 
 		tm.begin();
-
-		tm.getTransaction().enlistResource(new DummyPersistentXAResource("demo1", FaultType.FIRST_ROLLBACK_RMFAIL));
-		tm.getTransaction().enlistResource(new DummyPersistentXAResource("demo2", FaultType.PREPARE_FAIL));
+		Timestamp ts = new Timestamp(System.currentTimeMillis());
+		tm.getTransaction().enlistResource(new DummyPersistentXAResource("demo" + ts.getTime(), FaultType.FIRST_ROLLBACK_RMFAIL));
+		tm.getTransaction().enlistResource(new DummyPersistentXAResource("demo" + ts.getTime() + 1, FaultType.PREPARE_FAIL));
 		
 		create(em, "test");
 		tm.commit();

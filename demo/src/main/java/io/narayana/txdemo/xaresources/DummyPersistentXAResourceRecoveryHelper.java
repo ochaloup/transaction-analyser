@@ -6,7 +6,7 @@ import com.arjuna.ats.jta.recovery.XAResourceRecoveryHelper;
 
 public class DummyPersistentXAResourceRecoveryHelper implements XAResourceRecoveryHelper {
     public static final DummyPersistentXAResourceRecoveryHelper INSTANCE = new DummyPersistentXAResourceRecoveryHelper();
-    private static final DummyPersistentXAResource mockXARecoveringInstance = new DummyPersistentXAResource();
+    private static final XAResource mockXARecoveringInstance = new DummyPersistentXAResource("default");
 
     private DummyPersistentXAResourceRecoveryHelper() {
         if(INSTANCE != null) {

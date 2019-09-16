@@ -15,7 +15,7 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
 	
 	// using Set for two Xids would not be part of the collection
     private static final Collection<Xid> preparedXids = ConcurrentHashMap.newKeySet();
-    private static Logger log = Logger.getLogger(DummyPersistentXAResourceInitializer.class);
+    private static Logger log = Logger.getLogger(DummyPersistentXAResource.class);
 	private String name;
 	private FaultType fault = FaultType.NONE;
 	private static boolean noRollbackYet = true;
@@ -62,7 +62,7 @@ public class DummyPersistentXAResource implements XAResource, XAResourceWrapper,
 
 	@Override
 	public boolean isSameRM(XAResource xaResource) throws XAException {
-		return false;
+		return equals(xaResource);
 	}
 
 	@Override

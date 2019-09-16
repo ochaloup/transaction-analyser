@@ -9,7 +9,7 @@ import java.util.Set;
 public class DemoHelper {
 
 	private DemoHelper() {
-		// do not instantiate this class
+		// do not instantiate this class 
 	}
 
 	/**

@@ -44,6 +44,7 @@ import io.narayana.txdemo.demos.TimeoutTransactionDemo;
 import io.narayana.txdemo.demos.TimeoutWithRecoveryDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesCdiDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesEjbDemo;
+import io.narayana.txdemo.demos.remote.RemoteEjbClientDemo;
 import io.narayana.txdemo.tracing.TracingUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,9 @@ public class DemoRestService {
 
 	@EJB
 	TwoXAResourcesEjbDemo twoXAResourcesEJB;
+	
+	@EJB
+	RemoteEjbClientDemo remoteEjbClient;
 
 	@Inject
 	TwoXAResourcesCdiDemo twoXAResourcesCDI;
@@ -77,6 +81,7 @@ public class DemoRestService {
 		demos.addAll(DemoHelper.getCommonDemos());
 		demos.add(twoXAResourcesEJB);
 		demos.add(twoXAResourcesCDI);
+		demos.add(remoteEjbClient);
 		demos.add(new HaltDemo());
 	}
 

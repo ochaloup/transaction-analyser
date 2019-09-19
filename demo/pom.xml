@@ -31,6 +31,7 @@
 
 	<properties>
 		<jaeger.version>0.35.5</jaeger.version>
+		<ejb.quickstart.version>18.0.0.Final-SNAPSHOT</ejb.quickstart.version>
 	</properties>
 
 	<dependencies>
@@ -108,6 +109,24 @@
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 		</dependency>
+		
+		<!-- The following two dependencies must be installed manually (repository URL: https://github.com/wildfly/quickstart/tree/master/ejb-remote) -->
+		<!-- Include the ejb client jars -->
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-ejb-client-bom</artifactId>
+            <type>pom</type>
+            <scope>compile</scope>
+            <version>${ejb.quickstart.version}</version>
+        </dependency>
+
+        <!-- We depend on the EJB remote business interfaces of this application -->
+        <dependency>
+            <groupId>org.wildfly.quickstarts</groupId>
+            <artifactId>ejb-remote-server-side</artifactId>
+            <version>${ejb.quickstart.version}</version>
+            <type>ejb-client</type>
+        </dependency>
 
 	</dependencies>
 

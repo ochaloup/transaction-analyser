@@ -34,14 +34,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import io.narayana.txdemo.demos.ClientDrivenRollbackDemo;
 import io.narayana.txdemo.demos.Demo;
 import io.narayana.txdemo.demos.DemoHelper;
 import io.narayana.txdemo.demos.HaltDemo;
-import io.narayana.txdemo.demos.PrepareFailDemo;
-import io.narayana.txdemo.demos.SuccessTransactionDemo;
-import io.narayana.txdemo.demos.TimeoutTransactionDemo;
-import io.narayana.txdemo.demos.TimeoutWithRecoveryDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesCdiDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesEjbDemo;
 import io.narayana.txdemo.demos.remote.RemoteEjbClientDemo;
@@ -56,13 +51,13 @@ import java.util.List;
 public class DemoRestService {
 
 	private ArrayList<Demo> demos = new ArrayList<>();
-	
+
 	@EJB
 	private DemoDao dao;
 
 	@EJB
 	TwoXAResourcesEjbDemo twoXAResourcesEJB;
-	
+
 	@EJB
 	RemoteEjbClientDemo remoteEjbClient;
 

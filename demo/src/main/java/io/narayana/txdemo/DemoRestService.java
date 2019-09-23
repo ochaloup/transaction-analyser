@@ -40,7 +40,7 @@ import io.narayana.txdemo.demos.HaltDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesCdiDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesEjbDemo;
 import io.narayana.txdemo.demos.remote.RemoteEjbClientDemo;
-import io.narayana.txdemo.tracing.TracingUtils;
+import io.narayana.txdemo.tracing.TracingStartup;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,7 +72,6 @@ public class DemoRestService {
 
 	@PostConstruct
 	public void initDemos() {
-		TracingUtils.getTracer();
 		demos.addAll(DemoHelper.getCommonDemos());
 		demos.add(twoXAResourcesEJB);
 		demos.add(twoXAResourcesCDI);

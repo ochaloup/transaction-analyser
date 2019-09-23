@@ -27,7 +27,7 @@ import io.narayana.txdemo.demos.TimeoutTransactionDemo;
 import io.narayana.txdemo.demos.TimeoutWithRecoveryDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesCdiDemo;
 import io.narayana.txdemo.demos.TwoXAResourcesEjbDemo;
-import io.narayana.txdemo.tracing.TracingUtils;
+import io.narayana.txdemo.tracing.TracingStartup;
 
 @Path("/demo_auto")
 public class DemoAutomaticStreamService {
@@ -58,7 +58,6 @@ public class DemoAutomaticStreamService {
 
 	@PostConstruct
 	public void initDemos() {
-		TracingUtils.getTracer();
 		demosAuto.addAll(DemoHelper.getCommonDemos());
 		demosAuto.add(twoXAResourcesEJB);
 		demosAuto.add(twoXAResourcesCDI);

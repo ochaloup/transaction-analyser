@@ -36,7 +36,7 @@ public class RemoteEjbClientDemo extends Demo {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public DemoResult run(TransactionManager tm, EntityManager em) throws Exception {
-        ///invokeStatefulBean();
+        invokeStatefulBean();
         invokeStatelessBean();
         return new DemoResult(0, "EJB remote call");
     }

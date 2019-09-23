@@ -42,10 +42,8 @@ public class RemoteEjbClientDemo extends Demo {
     }
     
     private static void invokeStatefulBean() throws NamingException {
-        // Let's lookup the remote stateful counter
         final RemoteCounter statefulRemoteCounter = lookupRemoteStatefulCounter();
         LOG.debug("Obtained a remote stateful counter for invocation");
-        // invoke on the remote counter bean
         final int NUM_TIMES = 5;
         LOG.debug("Counter will now be incremented " + NUM_TIMES + " times");
         for (int i = 0; i < NUM_TIMES; i++) {
@@ -53,7 +51,6 @@ public class RemoteEjbClientDemo extends Demo {
             statefulRemoteCounter.increment();
             LOG.debug("Count after increment is " + statefulRemoteCounter.getCount());
         }
-        // now decrementing
         LOG.debug("Counter will now be decremented " + NUM_TIMES + " times");
         for (int i = NUM_TIMES; i > 0; i--) {
             LOG.debug("Decrementing counter");
@@ -63,10 +60,8 @@ public class RemoteEjbClientDemo extends Demo {
     }
 
     private static void invokeStatelessBean() throws NamingException {
-        // Let's lookup the remote stateless calculator
         final RemoteCalculator statelessRemoteCalculator = lookupRemoteStatelessCalculator();
         LOG.debug("Obtained a remote stateless calculator for invocation");
-        // invoke on the remote calculator
         int a = 204;
         int b = 340;
         LOG.debug("Adding " + a + " and " + b + " via the remote stateless calculator deployed on the server");
@@ -76,7 +71,6 @@ public class RemoteEjbClientDemo extends Demo {
             throw new RuntimeException("Remote stateless calculator returned an incorrect sum " + sum + " ,expected sum was "
                 + (a + b));
         }
-        // try one more invocation, this time for subtraction
         int num1 = 3434;
         int num2 = 2332;
         LOG.debug("Subtracting " + num2 + " from " + num1

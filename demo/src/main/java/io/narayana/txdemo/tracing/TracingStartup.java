@@ -8,7 +8,9 @@ import javax.ejb.Startup;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 
-@Singleton
+// we specify the name to avoid clash among other tracing startup beans
+// present in other libraries
+@Singleton(name = "txdemo-tracingstartup")
 @Startup
 public class TracingStartup {
 

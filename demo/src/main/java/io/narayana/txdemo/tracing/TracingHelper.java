@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.jboss.ejb.protocol.remote.tracing.SpanCodec;
-import org.jboss.ejb.protocol.remote.tracing.SpanFormat;
-
 import io.jaegertracing.Configuration;
 import io.jaegertracing.Configuration.CodecConfiguration;
 import io.jaegertracing.Configuration.ReporterConfiguration;
@@ -41,7 +38,6 @@ public class TracingHelper {
                 .withSampler(samplerConfig)
                 .withReporter(reporterConfig)
                 .getTracerBuilder();
-        bldr.registerInjector(SpanFormat.EJB, new SpanCodec());
         return bldr.build();
     }
 

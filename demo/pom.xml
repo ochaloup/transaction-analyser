@@ -35,11 +35,6 @@
 	</properties>
 
 	<dependencies>
-	    <dependency>
-	    	<groupId>org.jboss</groupId>
-	        <artifactId>jboss-ejb-client</artifactId>
-            <version>4.1.0.Final-SNAPSHOT</version>
-	    </dependency>
 		<dependency>
 			<groupId>io.opentracing.contrib</groupId>
 			<artifactId>opentracing-jms-2</artifactId>
@@ -132,6 +127,14 @@
 			<artifactId>ejb-remote-server-side</artifactId>
 			<version>${ejb.quickstart.version}</version>
 			<type>ejb-client</type>
+			<exclusions>
+			    <!-- we need to exclude tracing dependencies of the EJB server since initiliazer bean is included in this dependency
+			    we want to provide our one instead -->
+				<exclusion>
+					<groupId>org.wildfly.quickstarts</groupId>
+					<artifactId>tracing</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>

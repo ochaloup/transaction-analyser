@@ -120,7 +120,7 @@ public class RemoteEjbClientDemo extends Demo {
         // the whole package name.
 
         // let's do the lookup
-        return (RemoteCalculator) context.lookup("ejb:/ejb-remote-server-side/CalculatorBean!"
+        return (RemoteCalculator) context.lookup("ejb:/ejb-remote-server-side-jar-with-dependencies/CalculatorBean!"
             + RemoteCalculator.class.getName());
     }
     
@@ -158,7 +158,7 @@ public class RemoteEjbClientDemo extends Demo {
         // the whole package name.
 
         // let's do the lookup
-        return (RemoteCounter) context.lookup("ejb:/ejb-remote-server-side/CounterBean!"
+        return (RemoteCounter) context.lookup("ejb:/ejb-remote-server-side-jar-with-dependencies/CounterBean!"
             + RemoteCounter.class.getName() + "?stateful");
     }
 }

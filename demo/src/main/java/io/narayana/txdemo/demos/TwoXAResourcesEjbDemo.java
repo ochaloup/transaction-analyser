@@ -24,7 +24,8 @@ import io.narayana.txdemo.DummyEntity;
 @Stateless
 public class TwoXAResourcesEjbDemo extends TwoResourcesDemo {
 
-	@Resource(lookup = "java:/jboss/DummyXaConnectionFactory")
+	// @Resource(lookup = "java:/jboss/DummyXaConnectionFactory")
+	@Resource(lookup = "java:/JmsXA")
 	private XAConnectionFactory xaConnectionFactory;
 
 	@Resource(lookup = "java:/jms/queue/DummyQueue")

@@ -1,0 +1,9 @@
+<jboss-deployment-structure>
+    <deployment>
+        <dependencies>
+            <module name="io.opentracing.opentracing-api"/>
+            <module name="io.opentracing.opentracing-util"/>
+            <module name="io.jaegertracing.jaeger"/>
+        </dependencies>
+    </deployment>
+</jboss-deployment-structure>

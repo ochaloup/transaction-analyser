@@ -9,6 +9,9 @@ import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
 import org.jboss.as.quickstarts.ejb.remote.stateful.RemoteCounter;
 import org.jboss.as.quickstarts.ejb.remote.stateless.RemoteCalculator;
 import org.jboss.logging.Logger;
@@ -43,9 +46,20 @@ public class RemoteEjbClientDemo extends Demo {
     
     private static void invokeStatefulBean() throws NamingException {
         final RemoteCounter statefulRemoteCounter = lookupRemoteStatefulCounter();
-        LOG.debug("Obtained a remote stateful counter for invocation");
+        LOG.info("Obtained a remote stateful counter for invocation");
         final int NUM_TIMES = 5;
         LOG.debug("Counter will now be incremented " + NUM_TIMES + " times");
+
+        Span span = GlobalTracer.get().buildSpan("MMMMYYYY")
+                                     .withTag("lucky_number", 42)
+                                     .start();
+        GlobalTracer.get().activateSpan(span);
+        LOG.infof("Spaaan: %s", GlobalTracer.get().activeSpan());
+
+
+        GlobalTracer.get().buildSpan("myspan").start();
+        LOG.infof("Active span here: %s", GlobalTracer.get().activeSpan());
+
         for (int i = 0; i < NUM_TIMES; i++) {
             LOG.debug("Incrementing counter");
             statefulRemoteCounter.increment();
